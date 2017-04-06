@@ -96,7 +96,7 @@ def gravitation(particles, dt):
                 p1.velocity[0] += (ax * dt)
                 p1.velocity[1] += (ay * dt)
 
-                print("Particle: ", p1.index, p1.velocity)
+        print("Particle: ", p1.index, p1.velocity)
 
 def draw_grid(frame, window_size, box_size, tick_num, tick_length):
     """ Draws the grid lines and values around the outside of the box."""
@@ -130,10 +130,19 @@ def draw_grid(frame, window_size, box_size, tick_num, tick_length):
     for i in range(tick_num - 1):
         # Left Tick Labels
         frame.create_text(tick_length + 5, (i + 1) * tick_spacing,
-                          text=str("{0:3f}".format((i + 1) * tick_jump)) + " Rsun", anchor="w")
+                          text=str(((i + 1) * tick_jump) / R_sun) + " Rsun", anchor="w")
         # Top Tick Labels
         frame.create_text((i + 1) * tick_spacing, tick_length + 5, 
-                          text=str((i + 1) * tick_jump) + " Rsun", anchor="c")
+                          text=str(((i + 1) * tick_jump)/ R_sun) + " Rsun", anchor="c")
+
+
+def time_display(frame, time):
+    time_box_width = 120
+    time_box_height = 20
+    frame.create_rectangle(window_size - time_box_width - tick_length - 30, window_size - tick_length - 30,
+                           window_size - tick_length - 30, window_size - time_box_height - tick_length - 30, outline="white", fill="white")
+
+    frame.create_text(window_size - time_box_width - tick_length - 20, window_size - tick_length - 40, text=str("{0:.5f}".format(time)) + " yr", anchor="w")
 
 ################################################################################
 if __name__ == "__main__":
@@ -187,23 +196,26 @@ if __name__ == "__main__":
     window.title("N-Body Simulation")
     frame = tk.Canvas(window, height=str(window_size), width=str(window_size))
     frame.pack()
+    frame.configure(background="white")
 
 
     draw_grid(frame, window_size, box_size, tick_num, tick_length)
     
 
-    particle0 = Particle([100*R_sun, 100*R_sun], [0,10000], 2e30, 20 * R_sun, "#FF0000", 0)
-    particle1 = Particle([300*R_sun, 450*R_sun], [9000,0], 2e30, 20 * R_sun, "#00FF00", 1)
-    particle2 = Particle([900*R_sun, 900*R_sun], [2250,-2250], 2e30, 20 * R_sun, "#0000FF", 2)
+    particle0 = Particle([box_size/2, box_size/2], [0,0], 2e30, 20 * R_sun, "#FF0000", 0)
+    #particle1 = Particle([box_size/2, box_size/2 + 450 * R_sun], [6000,500], 0.2e30, 20 * R_sun, "#00FF00", 1)
+    particle2 = Particle([box_size/2 - 700 * R_sun, box_size/2 + 400*R_sun], [250,-6250], 0.2e30, 20 * R_sun, "#0000FF", 2)
 
 
-    particles = [particle0, particle1, particle2]
+    particles = [particle0, particle2]
 
-    for i in range(10000):
+    for cycle in range(10000):
         for j in range(len(particles)):
             gravitation(particles, time_step)
-            particles[j].update_position(time_step, i)
+            particles[j].update_position(time_step, cycle)
             frame.update()
-            time.sleep(0.005)
+            time.sleep(0.0005)
+            current_time = cycle * time_step / year
+            time_display(frame, current_time)
 
     tk.mainloop()
