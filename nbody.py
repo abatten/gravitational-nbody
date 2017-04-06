@@ -16,7 +16,10 @@ year = 365.25 * 24 * 60 * 60 # 1 year in s
 def draw_grid(frame, window_size, box_size, tick_num, tick_length):
     """ Draws the grid lines and values around the outside of the box."""
 
+    # Difference between adjacent tick values
     tick_jump = box_size / tick_num
+
+    # Physical Distance between ticks on the screen
     tick_spacing = window_size / tick_num
 
 
@@ -48,13 +51,50 @@ def draw_grid(frame, window_size, box_size, tick_num, tick_length):
         frame.create_text((i + 1) * tick_spacing, tick_length + 5, 
                           text=str((i + 1) * tick_jump) + " Rsun", anchor="c")
 
-
+################################################################################
 if __name__ == "__main__":
-    window_size = 800
-    box_size = 1000
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--boxsize", help="The dimentions of the box in solar \
+                         radii. Default: 1000", type=int)
+    parser.add_argument("--timestep", help="The length of the time step \
+                         between calculations", type=float)
+    parser.add_argument("--windowsize", help="The height and width of the \
+                         window in pixels. Default: 1000", type=int)
+    parser.add_argument("--ticknum", help="The number of ticks on each side \
+                         of the window. Default: 10", type=int)
+    parser.add_argument("--ticklength", help="The length of each tick on the \
+                         side of the window in pixels. Default: 20", type=int)
 
-    tick_num = 10
-    tick_length = 20
+    args = parser.parse_args()
+
+
+    # Setup defults and read arguments
+    if args.windowsize:
+        window_size = args.windowsize
+    else:
+        window_size = 1000
+
+    if args.boxsize:
+        box_size = args.boxsize
+        scale = window_size/box_size
+    else:
+        box_size = 1000
+        scale = window_size/box_size
+
+    if args.timestep:
+        time_step = args.timestep
+    else:
+        time_step = 0.0027 # 1 day
+
+    if args.ticknum:
+        tick_num = args.ticknum
+    else:
+        tick_num = 10 
+
+    if args.ticklength:
+        tick_length = args.ticklength
+    else:
+        tick_length = 20 
 
 
     window = tk.Tk()
