@@ -12,6 +12,25 @@ class Particle:
     """
     Class to represent point masses.
 
+    Parameters
+    ----------
+    pos : [float, float, float]
+        The particle position in the window
+        Unit: Rsun
+    vel : [float, float, float]
+        Array of velocities of the partcle
+        Unit: km/s
+    mas : float
+        Mass of the particle.
+        Unit Msun
+    dex : int
+        Index of the particle
+    col : (int, int, int)
+        Colour of the particle
+    display : bool
+        
+
+
     """
     def __init__(self, win, init_pos, init_vel, mass=1, rad=1, dex=0, col=(0,0,0)):
         self.pos = init_pos
@@ -30,53 +49,85 @@ class Particle:
 
     def draw(self, win):
         """
-        Draws the particle in its initial position
+        Draws the particle in its initial position.
+
+        Parameters
+        ----------
+        win : pygame.display
+            The window to draw the particle
+
+        Returns
+        -------
+        NONE
         """
-        pyg.draw.circle(win, self.col, (self.pos[0],self.pos[1]), self.rad , 0)
+        pyg.draw.circle(win, self.col, (int(self.pos[0]), int(self.pos[1])), self.rad , 0)
 
-        return()
 
-def dist_to(particle1, particle2):
-    """
-    Calculates the distance between two particles.
+    def dist_to(self, other):
+        """
+        Calculates the distance between itself an another particle.
 
-    Parameters
-    ----------
-    particle1: particle
-    particle2: particle
+        Parameters
+        ----------
+        other : particle
+            The particle to find the distance to.
     
-    Returns
-    -------
-    dist : float
-        The distance between the two particles   
-    """
+        Returns
+        -------
+        dist : float
+            The distance between the two particles   
+        """
 
-    x1 = particle1.pos[0]
-    y1 = particle1.pos[1]
-    z1 = particle1.pos[2]
+        x1 = self.pos[0]
+        y1 = self.pos[1]
+        z1 = self.pos[2]
 
-    x2 = particle2.pos[0]
-    y2 = particle2.pos[1]
-    z2 = particle2.pos[2]
+        x2 = other.pos[0]
+        y2 = other.pos[1]
+        z2 = other.pos[2]
 
-    dist = np.sqrt((x1 - x2)**2.0 + (y1 - y2)**2.0 + (z1 - z2)**2.0)
+        dist = np.sqrt((x1 - x2)**2.0 + (y1 - y2)**2.0 + (z1 - z2)**2.0)
 
-    return dist
+        return dist * C.XRSUN
 
-def find_acceleration(Particle_list):
-    """
-    Finds the acceleration on a particle due to all other particles.
+    def find_acceleration(self, particle_list):
+        """
+        Finds the acceleration on a particle due to all other particles.
 
-    Parameters
-    ----------
-    particle1: particle
-    particle2: particle
+        Parameters
+        ----------
+        particle_list : list
+            List of all gravitating particles
     
-    Returns
-    -------
-    accel : float
-        The acceleration on the particle   
-    """   
+        Returns
+        -------
+        accel : [float, float, float]
+            The acceleration comppnents on the particle   
+        """   
+        ax = 0
+        ay = 0
+        az = 0
+
+        for p1 in particle_list:
+            if p1 is not self:
+                deltaX = (p1.pos[0] - self.pos[0]) * C.XRSUN
+                deltaY = (p1.pos[1] - self.pos[1]) * C.XRSUN
+                deltaZ = (p1.pos[2] - self.pos[2]) * C.XRSUN
+
+                d = self.dist_to(p1)
+                dsquared = d**2.0
+
+                #  C.XG is Gravitational Strength
+                Force = C.XG * self.mas * p1.mas / dsquared
+                ax += (Force / self.mas) * (deltaX / d)
+                ay += (Force / self.mas) * (deltaY / d)
+                az += (Force / self.mas) * (deltaZ / d)
+
+                accel = [ax, ay, az]
+        return accel
+
+
+
 
 
 def draw_axes(win, WINSIZE, BOXSIZE, TICKNUM, TICKLEN):
@@ -85,6 +136,8 @@ def draw_axes(win, WINSIZE, BOXSIZE, TICKNUM, TICKLEN):
 
     Parameters
     ----------
+    win : pygame.display
+        The window to draw the axes in.
     WINSIZE : int
         The height and width of the window to be created.
     BOXSIZE : int
@@ -102,35 +155,40 @@ def draw_axes(win, WINSIZE, BOXSIZE, TICKNUM, TICKLEN):
     TICKJUMP = BOXSIZE / TICKNUM  # Value difference between axis labels
     TICKSPACE = WINSIZE / TICKNUM  # Physical distance bwtween axis labels
     TICKCOLOUR = 0x000000  # Black
+    TICKTHICK = 2  # THickness of the ticks
 
     # Draw the tick marks
     for i in range(TICKNUM):
 
         #  Left Ticks
         pyg.draw.line(win, TICKCOLOUR, (0, i * TICKSPACE),
-                          (TICKLEN, i * TICKSPACE), 2)
+                          (TICKLEN, i * TICKSPACE), TICKTHICK)
         #  Right Ticks
         pyg.draw.line(win, TICKCOLOUR, (WINSIZE - TICKLEN, i * TICKSPACE),
-                          (WINSIZE, i * TICKSPACE), 2)
+                          (WINSIZE, i * TICKSPACE), TICKTHICK)
         #  Top Ticks
         pyg.draw.line(win, TICKCOLOUR, (i * TICKSPACE, 0),
-                          (i * TICKSPACE, TICKLEN), 2)
+                          (i * TICKSPACE, TICKLEN), TICKTHICK)
         # Bottom Ticks
         pyg.draw.line(win, TICKCOLOUR, (i * TICKSPACE, WINSIZE - TICKLEN),
-                          (i * TICKSPACE, WINSIZE), 2)      
+                          (i * TICKSPACE, WINSIZE), TICKTHICK)      
 
     #  Font Type    
-    tick_font = pyg.font.SysFont("monospace", 13)
+    label_font = pyg.font.SysFont("monospace", 13)
+    LABELPAD = 5  # Padding around the ticks for the label
+    LABELCOLOUR = (0,0,0)  # Font colour of the labels
 
     for i in range(TICKNUM -1):
         #  Create Labels
-        label = tick_font.render(str("{0:.1f}".format((i + 1) * TICKJUMP / C.XRSUN)) + "Rsun", 2, (0,0,0))
+        label = label_font.render(str("{0:.1f}".format(
+                                 (i + 1) * TICKJUMP / C.XRSUN)) + "Rsun", 
+                                 1, LABELCOLOUR)
 
         #  Display Left Ticks
-        win.blit(label, (TICKLEN + 5, (i+1) * TICKSPACE - label.get_height() / 2.0 ))
+        win.blit(label, (TICKLEN + LABELPAD, (i+1) * TICKSPACE - label.get_height() / 2.0 ))
 
         #  Display Top Ticks
-        win.blit(label, ((i+1) * TICKSPACE - label.get_width() / 2.0, TICKLEN + 5))
+        win.blit(label, ((i+1) * TICKSPACE - label.get_width() / 2.0, TICKLEN + LABELPAD))
 
 
 def time_display(win, time, WINSIZE, TICKLEN, BACKCOLOUR):
@@ -141,6 +199,8 @@ def time_display(win, time, WINSIZE, TICKLEN, BACKCOLOUR):
     The time is specified to 5 decimal places.
     Parameters
     ----------
+    win : pygame.display
+        The window to draw the axes in.
     WINSIZE : int
         The height and width of the window to be created.
     TICKLEN : int
@@ -153,7 +213,7 @@ def time_display(win, time, WINSIZE, TICKLEN, BACKCOLOUR):
 
     TIMEBOX_WIDTH = 90  
     TIMEBOX_HEIGHT = 20
-    text_col = (0,0,0)   # Black
+    TEXTCOLOUR = (0,0,0)   # Black
     RECT_PAD = 20  # Padding around the ticks
 
 
@@ -164,7 +224,7 @@ def time_display(win, time, WINSIZE, TICKLEN, BACKCOLOUR):
                                     TIMEBOX_HEIGHT), 0)
 
     timer_font = pyg.font.SysFont("monospace", 15)
-    timer = timer_font.render(str("{0:.5f}".format(time)) + " yr", 2, text_col)
+    timer = timer_font.render(str("{0:.5f}".format(time)) + " yr", 2, TEXTCOLOUR)
     win.blit(timer, (WINSIZE - TIMEBOX_WIDTH - TICKLEN - RECT_PAD,
                      WINSIZE - TICKLEN - RECT_PAD - timer.get_height()) )
 
@@ -289,10 +349,13 @@ def main():
 
     win, BACKCOLOUR = initialise_display(WINSIZE, BOXSIZE, TICKNUM, TICKLEN)
 
-    Plist = [Particle(win, [500, 200, 300], [0, 0, 0], 10, 4, 0, (255,0,0)),
-             Particle(win, [300, 100, 400], [0, 0, 0], 10, 4, 0, (0,255,0))]
+    Plist = [Particle(win, [0, 0, 0], [0, 0, 0], 10, 4, 0, (255,0,0)),
+             Particle(win, [100, 100, 100], [0, 0, 0], 10, 4, 0, (0,255,0)),
+             Particle(win, [101, 100, 100], [0, 0, 0], 10, 4, 0, (0,0,255))]
 
-    print(dist_to(Plist[0], Plist[1]))
+    print(Plist[0].dist_to(Plist[1]))
+    for i in range(len(Plist)):
+        print(Plist[i].find_acceleration(Plist))
     running = True
     while running:
         pyg.display.flip()  # Refresh Display
