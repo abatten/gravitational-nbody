@@ -27,27 +27,23 @@ class Particle:
         Index of the particle
     col : (int, int, int)
         Colour of the particle
-    display : bool
-        
-
 
     """
     def __init__(self, win, init_pos, init_vel, mass=1, rad=1, dex=0, col=(0,0,0)):
-        self.pos = init_pos
-        self.vel = init_vel
+        self.pos = [x * C.XRSUN for x in init_pos] # Conver to meters
+        self.vel = [v * C.XKM for v in init_vel]  # Convert to meters
         self.mas = mass * C.XMSUN  # Convert to kilograms
         self.rad = rad #* C.XRSUN  #  Convert to meters
         self.dex = dex
         self.col = col
-        self.display = True
 
-        self.draw(win)
 
     def __repr__(self):
         return ('Position:{x} Velocity:{v} Mass:{m} Radius:{r} Index:{d} Colour:{c}'.format(
                 x=self.pos, v=self.vel, m=self.mas, r=self.rad, d=self.dex, c=self.col))
 
-    def draw(self, win):
+
+    def draw(self, win, SCALE):
         """
         Draws the particle in its initial position.
 
@@ -60,7 +56,7 @@ class Particle:
         -------
         NONE
         """
-        pyg.draw.circle(win, self.col, (int(self.pos[0]), int(self.pos[1])), self.rad , 0)
+        pyg.draw.circle(win, self.col, (int(self.pos[0]/C.XRSUN*SCALE), int(self.pos[1]/C.XRSUN*SCALE)), int(self.rad*SCALE) + 2 , 0)
 
 
     def dist_to(self, other):
@@ -88,46 +84,119 @@ class Particle:
 
         dist = np.sqrt((x1 - x2)**2.0 + (y1 - y2)**2.0 + (z1 - z2)**2.0)
 
-        return dist * C.XRSUN
+        return dist
 
-    def find_acceleration(self, particle_list):
+
+    def acceleration(self, position, particleList):
         """
         Finds the acceleration on a particle due to all other particles.
 
         Parameters
         ----------
+        position : float
+            The position at which to calculate the gravitational acceleration
         particle_list : list
             List of all gravitating particles
     
         Returns
         -------
-        accel : [float, float, float]
+        a : [float, float, float]
             The acceleration comppnents on the particle   
         """   
         ax = 0
         ay = 0
         az = 0
 
-        for p1 in particle_list:
+        for p1 in particleList:
             if p1 is not self:
-                deltaX = (p1.pos[0] - self.pos[0]) * C.XRSUN
-                deltaY = (p1.pos[1] - self.pos[1]) * C.XRSUN
-                deltaZ = (p1.pos[2] - self.pos[2]) * C.XRSUN
+                dX = (p1.pos[0] - position[0])
+                dY = (p1.pos[1] - position[1])
+                dZ = (p1.pos[2] - position[2])
 
                 d = self.dist_to(p1)
                 dsquared = d**2.0
 
                 #  C.XG is Gravitational Strength
                 Force = C.XG * self.mas * p1.mas / dsquared
-                ax += (Force / self.mas) * (deltaX / d)
-                ay += (Force / self.mas) * (deltaY / d)
-                az += (Force / self.mas) * (deltaZ / d)
+                ax += (Force / self.mas) * (dX / d)
+                ay += (Force / self.mas) * (dY / d)
+                az += (Force / self.mas) * (dZ / d)
 
-                accel = [ax, ay, az]
-        return accel
-
+        return ax, ay, az
 
 
+
+def rk4(particle, particleList, dt):
+    """
+    particle : Initial Position
+    particleList : Initial Velocity
+    a : acceleration
+    """
+    #  Current Velocity   
+    vx1 = particle.vel[0]
+    vy1 = particle.vel[1]
+    vz1 = particle.vel[2]
+
+    #  Current Position
+    px1 = particle.pos[0] 
+    py1 = particle.pos[1] 
+    pz1 = particle.pos[2] 
+
+    #  Current Acceleration
+    ax1, ay1, az1 = particle.acceleration([px1, py1, pz1], particleList)
+
+    #  Step 2
+    vx2 = vx1 + 0.5 * dt * ax1
+    vy2 = vy1 + 0.5 * dt * ay1
+    vz2 = vz1 + 0.5 * dt * az1
+
+    px2 = px1 + 0.5 * dt * vx2
+    py2 = py1 + 0.5 * dt * vy2
+    pz2 = pz1 + 0.5 * dt * vz2
+
+    ax2, ay2, az2 = particle.acceleration([px2, py2, pz2], particleList)
+
+    #  Step 3
+    vx3 = vx1 + 0.5 * dt * ax2
+    vy3 = vy1 + 0.5 * dt * ay2
+    vz3 = vz1 + 0.5 * dt * az2
+
+    px3 = px1 + 0.5 * dt * vx3
+    py3 = py1 + 0.5 * dt * vy3
+    pz3 = pz1 + 0.5 * dt * vz3
+
+    ax3, ay3, az3 = particle.acceleration([px3, py3, pz3], particleList)
+
+    #  Step 4
+    vx4 = vx1 + 0.5 * dt * ax3
+    vy4 = vy1 + 0.5 * dt * ay3
+    vz4 = vz1 + 0.5 * dt * az3
+
+    px4 = px1 + 0.5 * dt * vx4
+    py4 = py1 + 0.5 * dt * vy4
+    pz4 = pz1 + 0.5 * dt * vz4
+
+    ax4, ay4, az4 = particle.acceleration([px3, py3, pz3], particleList)
+
+    #  Final positions and velocities
+    new_vx = vx1 + (1.0/6.0) * dt * (ax1 + 2 * (ax2 + ax3) + ax4)
+    new_vy = vy1 + (1.0/6.0) * dt * (ay1 + 2 * (ay2 + ay3) + ay4)
+    new_vz = vz1 + (1.0/6.0) * dt * (az1 + 2 * (az2 + az3) + az4)
+
+    new_px = px1 + (1.0/6.0) * dt * (vx1 + 2 * (vx2 + vx3) + vx4)
+    new_py = py1 + (1.0/6.0) * dt * (vy1 + 2 * (vy2 + vy3) + vy4)
+    new_pz = pz1 + (1.0/6.0) * dt * (vz1 + 2 * (vz2 + vz3) + vz4)
+  
+    new_vel = [new_vx, new_vy, new_vz]
+    new_pos = [new_px, new_py, new_pz]
+
+    return new_pos, new_vel
+
+
+def update_particles(win, Plist, dt, SCALE):
+    for i in range(len(Plist)):
+        Plist[i].pos, Plist[i].vel = rk4(Plist[i], Plist, dt)
+        Plist[i].draw(win, SCALE)
 
 
 def draw_axes(win, WINSIZE, BOXSIZE, TICKNUM, TICKLEN):
@@ -182,7 +251,7 @@ def draw_axes(win, WINSIZE, BOXSIZE, TICKNUM, TICKLEN):
         #  Create Labels
         label = label_font.render(str("{0:.1f}".format(
                                  (i + 1) * TICKJUMP / C.XRSUN)) + "Rsun", 
-                                 1, LABELCOLOUR)
+                                 0, LABELCOLOUR)
 
         #  Display Left Ticks
         win.blit(label, (TICKLEN + LABELPAD, (i+1) * TICKSPACE - label.get_height() / 2.0 ))
@@ -299,6 +368,7 @@ def read_args():
     """
 
     # Add the arguments for the user
+    print("Reading")
     parser = argparse.ArgumentParser()
     parser.add_argument("--boxsize", help="The dimentions of the box in solar \
                          radii. Default: 1000", type=int)
@@ -321,15 +391,15 @@ def read_args():
 
     if args.boxsize:
         BOXSIZE = args.boxsize * C.XRSUN
-        SCALE = WINSIZE / BOXSIZE
+        SCALE = WINSIZE / args.boxsize
     else:
         BOXSIZE = 1000 * C.XRSUN
-        SCALE = WINSIZE / BOXSIZE
+        SCALE = WINSIZE / 1000
 
     if args.timestep:
         TIMESTEP = args.timestep
     else:
-        TIMESTEP = C.XDAY / 10  # 0.1 day in seconds
+        TIMESTEP = C.XDAY   # 1 day in seconds
 
     if args.ticknum:
         TICKNUM = args.ticknum
@@ -349,23 +419,24 @@ def main():
 
     win, BACKCOLOUR = initialise_display(WINSIZE, BOXSIZE, TICKNUM, TICKLEN)
 
-    Plist = [Particle(win, [0, 0, 0], [0, 0, 0], 10, 4, 0, (255,0,0)),
-             Particle(win, [100, 100, 100], [0, 0, 0], 10, 4, 0, (0,255,0)),
-             Particle(win, [101, 100, 100], [0, 0, 0], 10, 4, 0, (0,0,255))]
+    Plist = [Particle(win, [2973+1000, 2500+4000, 0], [0, -59.85, 0], 2, 4, 0, (255,0,0)),
+             Particle(win, [2500+1000,2500+4000,0], [0,6.65, 0], 15, 4, 0, (0,255,0)),
+             Particle(win, [4500+1000, 2500+4000, 0], [0, -36.79, 0], 2, 4, 0, (0,0,255))]
 
-    print(Plist[0].dist_to(Plist[1]))
-    for i in range(len(Plist)):
-        print(Plist[i].find_acceleration(Plist))
+    time = 0
     running = True
     while running:
         pyg.display.flip()  # Refresh Display
+        time += TIMESTEP / C.XYR
 
+        update_particles(win, Plist, TIMESTEP, SCALE)
+        time_display(win, time, WINSIZE, TICKLEN, BACKCOLOUR)
+        draw_axes(win, WINSIZE, BOXSIZE, TICKNUM, TICKLEN)
 
         # Check of the close button is pushed and Quit if so.
         for event in pyg.event.get():
             if event.type == pyg.QUIT:
                 running = False
-
 
 if __name__ == '__main__':
     main()
