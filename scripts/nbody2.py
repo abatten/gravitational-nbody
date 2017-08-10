@@ -36,7 +36,7 @@ class Particle:
         return()
 
 
-def draw_axes(win, window_size, box_size, tick_num, tick_length):
+def draw_axes(win, win_size, box_size, tick_num, tick_len):
     """
     Draws the grid lines and labels around the outside of the box.
     Parameters
@@ -56,7 +56,7 @@ def draw_axes(win, window_size, box_size, tick_num, tick_length):
     """
 
     tick_jump = box_size / tick_num  # Value difference between axis labels
-    tick_space = window_size / tick_num  # Physical distance bwtween axis labels
+    tick_space = win_size / tick_num  # Physical distance bwtween axis labels
     tick_colour = 0x000000  # Black
 
     # Draw the tick marks
@@ -64,16 +64,16 @@ def draw_axes(win, window_size, box_size, tick_num, tick_length):
 
         #  Left Ticks
         pyg.draw.line(win, tick_colour, (0, i * tick_space),
-                          (tick_length, i * tick_space), 2)
+                          (tick_len, i * tick_space), 2)
         #  Right Ticks
-        pyg.draw.line(win, tick_colour, (window_size - tick_length, i * tick_space),
-                          (window_size, i * tick_space), 2)
+        pyg.draw.line(win, tick_colour, (win_size - tick_len, i * tick_space),
+                          (win_size, i * tick_space), 2)
         #  Top Ticks
         pyg.draw.line(win, tick_colour, (i * tick_space, 0),
-                          (i * tick_space, tick_length), 2)
+                          (i * tick_space, tick_len), 2)
         # Bottom Ticks
-        pyg.draw.line(win, tick_colour, (i * tick_space, window_size - tick_length),
-                          (i * tick_space, window_size), 2)      
+        pyg.draw.line(win, tick_colour, (i * tick_space, win_size - tick_len),
+                          (i * tick_space, win_size), 2)      
 
     #  Font Type    
     tick_font = pyg.font.SysFont("monospace", 15)
@@ -83,13 +83,13 @@ def draw_axes(win, window_size, box_size, tick_num, tick_length):
         label = tick_font.render(str("{0:.2f}".format((i + 1) * tick_jump / C.XRSUN)) + "Rsun", 2, (0,0,0))
 
         #  Display Left Ticks
-        win.blit(label, (tick_length + 5, (i+1) * tick_space - label.get_height() / 2.0 ))
+        win.blit(label, (tick_len + 5, (i+1) * tick_space - label.get_height() / 2.0 ))
 
         #  Display Top Ticks
-        win.blit(label, ((i+1) * tick_space - label.get_width() / 2.0, tick_length + 5))
+        win.blit(label, ((i+1) * tick_space - label.get_width() / 2.0, tick_len + 5))
 
 
-def time_display(win, time, window_size, tick_length):
+def time_display(win, time, win_size, tick_len):
     """
     Create Time Box in lower right hand corner.
     Creates a box to display the current time in the simulation.
@@ -112,18 +112,18 @@ def time_display(win, time, window_size, tick_length):
     text_colour = (0,0,0)
 
     #  rect(x,y, width, height, fill=True)
-    pyg.draw.rect(win, rect_colour,(window_size - time_box_width - tick_length - 30,
-                                    window_size - time_box_height - tick_length - 30,
+    pyg.draw.rect(win, rect_colour,(win_size - time_box_width - tick_len - 30,
+                                    win_size - time_box_height - tick_len - 30,
                                     time_box_width,
                                     time_box_height), 0)
 
     timer_font = pyg.font.SysFont("monospace", 15)
     timer = timer_font.render(str("{0:.5f}".format(time)) + " yr", 2, text_colour)
-    win.blit(timer, (window_size - time_box_width - tick_length - 20,
-                     window_size - tick_length - 40 - timer.get_height() / 2.0) )
+    win.blit(timer, (win_size - time_box_width - tick_len - 20,
+                     win_size - tick_len - 40 - timer.get_height() / 2.0) )
 
 
-def initialise_display(window_size, box_size, tick_num, tick_length, time):
+def initialise_display(win_size, box_size, tick_num, tick_len, time):
     """
     Initialise the window that everything will be displayed in.
     Creates a screen using pygame. Initialises the background and 
@@ -148,12 +148,12 @@ def initialise_display(window_size, box_size, tick_num, tick_length, time):
     """
 
     pyg.init()
-    win = pyg.display.set_mode((window_size,window_size))
+    win = pyg.display.set_mode((win_size,win_size))
     win.fill((255,255,255))
     pyg.display.set_caption("N-Body 3D gravitational Simulator")
 
-    draw_axes(win, window_size, box_size, tick_num, tick_length)
-    time_display(win, time, window_size, tick_length)
+    draw_axes(win, win_size, box_size, tick_num, tick_len)
+    time_display(win, time, win_size, tick_len)
     pyg.display.flip() 
 
     return win
@@ -161,13 +161,13 @@ def initialise_display(window_size, box_size, tick_num, tick_length, time):
 
 def main():
 
-    window_size = 1000
+    win_size = 1000
     box_size = 1000 * C.XRSUN
     tick_num = 10
-    tick_length = 20
+    tick_len = 20
     time = 0
 
-    win = initialise_display(window_size, box_size, tick_num, tick_length, time)
+    win = initialise_display(win_size, box_size, tick_num, tick_len, time)
 
     Plist = [Particle(win, [500, 200, 300], [0, 0, 0], 10, 10, 0)]
 
