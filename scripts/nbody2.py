@@ -20,6 +20,7 @@ class Particle:
         self.rad = rad #* C.XRSUN  #  Convert to meters
         self.dex = dex
         self.col = col
+        self.display = True
 
         self.draw(win)
 
@@ -35,10 +36,53 @@ class Particle:
 
         return()
 
+def dist_to(particle1, particle2):
+    """
+    Calculates the distance between two particles.
+
+    Parameters
+    ----------
+    particle1: particle
+    particle2: particle
+    
+    Returns
+    -------
+    dist : float
+        The distance between the two particles   
+    """
+
+    x1 = particle1.pos[0]
+    y1 = particle1.pos[1]
+    z1 = particle1.pos[2]
+
+    x2 = particle2.pos[0]
+    y2 = particle2.pos[1]
+    z2 = particle2.pos[2]
+
+    dist = np.sqrt((x1 - x2)**2.0 + (y1 - y2)**2.0 + (z1 - z2)**2.0)
+
+    return dist
+
+def find_acceleration(Particle_list):
+    """
+    Finds the acceleration on a particle due to all other particles.
+
+    Parameters
+    ----------
+    particle1: particle
+    particle2: particle
+    
+    Returns
+    -------
+    accel : float
+        The acceleration on the particle   
+    """   
+
 
 def draw_axes(win, win_size, box_size, tick_num, tick_len):
     """
     Draws the grid lines and labels around the outside of the box.
+
     Parameters
     ----------
     win_size : int
@@ -76,11 +120,11 @@ def draw_axes(win, win_size, box_size, tick_num, tick_len):
                           (i * tick_space, win_size), 2)      
 
     #  Font Type    
-    tick_font = pyg.font.SysFont("monospace", 15)
+    tick_font = pyg.font.SysFont("monospace", 13)
 
     for i in range(tick_num -1):
         #  Create Labels
-        label = tick_font.render(str("{0:.2f}".format((i + 1) * tick_jump / C.XRSUN)) + "Rsun", 2, (0,0,0))
+        label = tick_font.render(str("{0:.1f}".format((i + 1) * tick_jump / C.XRSUN)) + "Rsun", 2, (0,0,0))
 
         #  Display Left Ticks
         win.blit(label, (tick_len + 5, (i+1) * tick_space - label.get_height() / 2.0 ))
@@ -92,6 +136,7 @@ def draw_axes(win, win_size, box_size, tick_num, tick_len):
 def time_display(win, time, win_size, tick_len, background):
     """
     Create Time Box in lower right hand corner.
+
     Creates a box to display the current time in the simulation.
     The time is specified to 5 decimal places.
     Parameters
@@ -128,6 +173,7 @@ def time_display(win, time, win_size, tick_len, background):
 def initialise_display(win_size, box_size, tick_num, tick_len, time=0):
     """
     Initialise the window that everything will be displayed in.
+
     Creates a screen using pygame. Initialises the background and 
     draws axes along each edge and displays the current time in the 
     bottom right hand corner.
@@ -163,7 +209,35 @@ def initialise_display(win_size, box_size, tick_num, tick_len, time=0):
     return win, background
 
 
-def main():
+def read_args():
+    """
+    Read the arguments specified by the user.
+
+    Utilises argparse to read the arguments that the 
+    user specified. These arguments are used to change the 
+    display. The arguments that the user can specify are:
+
+    --winsize, --boxsize, --timestep, --ticknum, --ticklen
+
+    Parameters
+    ----------
+    NONE
+
+    Returns
+    -------
+    win_size : int
+        The height and width of the window to be created.
+    box_size : int
+        The hight and width of the window in physical units.
+    scale : float
+        The ratio between the win_size and the box_size. 
+    tick_num : int
+        The number of tick marks along each edge of the window.
+    tick_len : int
+        The length of with tick mark in pixels.
+    time : float
+        The initial time to print in the bottom right hand corner.
+    """
 
     # Add the arguments for the user
     parser = argparse.ArgumentParser()
@@ -206,19 +280,23 @@ def main():
     if args.ticklen:
         tick_len = args.ticklen
     else:
-        tick_len = 20
+        tick_len = 20   
 
+    return win_size, box_size, scale, time_step, tick_num, tick_len
 
+def main():
+
+    win_size, box_size, scale, time_step, tick_num, tick_len = read_args()
 
     win, background = initialise_display(win_size, box_size, tick_num, tick_len)
 
-    Plist = [Particle(win, [500, 200, 300], [0, 0, 0], 10, 10, 0)]
+    Plist = [Particle(win, [500, 200, 300], [0, 0, 0], 10, 4, 0, (255,0,0)),
+             Particle(win, [300, 100, 400], [0, 0, 0], 10, 4, 0, (0,255,0))]
 
+    print(dist_to(Plist[0], Plist[1]))
     running = True
     while running:
         pyg.display.flip()  # Refresh Display
-
-
 
 
         # Check of the close button is pushed and Quit if so.
