@@ -94,7 +94,10 @@ def draw_axes(win, win_size, box_size, tick_num, tick_len):
 
 def time_display(win, time, win_size, tick_len):
     """
-    Create Timer Box in lower right hand corner
+    Create Time Box in lower right hand corner.
+
+    Creates a box to display the current time in the simulation.
+    The time is specified to 4 decimal places.
 
     Parameters
     ----------
@@ -131,8 +134,8 @@ def initialise_display(win_size, box_size, tick_num, tick_len, time=0):
     Initialise the window that everything will be displayed in.
 
     Creates a screen using pygame. Initialises the background and 
-    draws axes along each edge and timer in the bottom right hand
-    corner.
+    draws axes along each edge and displays the current time in the 
+    bottom right hand corner.
 
     Parameters
     ----------
@@ -159,8 +162,12 @@ def initialise_display(win_size, box_size, tick_num, tick_len, time=0):
     win.fill((255,255,255))
     pyg.display.set_caption("N-Body 3D gravitational Simulator")
 
+    #  Add axes
     draw_axes(win, win_size, box_size, tick_num, tick_len)
+    #  Display the initial time
     time_display(win, time, win_size, tick_len)
+    
+    #  Refresh the display
     pyg.display.flip() 
 
     return win
@@ -172,7 +179,7 @@ def main():
     parser.add_argument("--boxsize", help="The dimentions of the box in solar \
                          radii. Default: 1000", type=int)
     parser.add_argument("--timestep", help="The length of the time step \
-                         between calculations", type=float)
+                         between calculations. Default: 1 day", type=float)
     parser.add_argument("--winsize", help="The height and width of the \
                          window in pixels. Default: 1000", type=int)
     parser.add_argument("--ticknum", help="The number of ticks on each side \
@@ -182,7 +189,7 @@ def main():
 
     args = parser.parse_args()
 
-    # Setup defults and read arguments
+    # Setup defaults and read arguments
     if args.winsize:
         win_size = args.winsize
     else:
