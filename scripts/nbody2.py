@@ -89,11 +89,11 @@ def draw_axes(win, win_size, box_size, tick_num, tick_len):
         win.blit(label, ((i+1) * tick_space - label.get_width() / 2.0, tick_len + 5))
 
 
-def time_display(win, time, win_size, tick_len):
+def time_display(win, time, win_size, tick_len, background):
     """
     Create Time Box in lower right hand corner.
     Creates a box to display the current time in the simulation.
-    The time is specified to 4 decimal places.
+    The time is specified to 5 decimal places.
     Parameters
     ----------
     win_size : int
@@ -106,24 +106,26 @@ def time_display(win, time, win_size, tick_len):
     NONE
     """
 
-    time_box_width = 120
+    time_box_width = 90  
     time_box_height = 20
-    rect_colour = 0xFFFFFF
-    text_colour = (0,0,0)
+    rect_col = background #rect_col = 0xFF0000  # White
+    text_col = (0,0,0)   # Black
+    rect_pad = 20  # Padding around the ticks
+
 
     #  rect(x,y, width, height, fill=True)
-    pyg.draw.rect(win, rect_colour,(win_size - time_box_width - tick_len - 30,
-                                    win_size - time_box_height - tick_len - 30,
+    pyg.draw.rect(win, rect_col,(win_size - time_box_width - tick_len - rect_pad,
+                                 win_size - time_box_height - tick_len - rect_pad,
                                     time_box_width,
                                     time_box_height), 0)
 
     timer_font = pyg.font.SysFont("monospace", 15)
-    timer = timer_font.render(str("{0:.5f}".format(time)) + " yr", 2, text_colour)
-    win.blit(timer, (win_size - time_box_width - tick_len - 20,
-                     win_size - tick_len - 40 - timer.get_height() / 2.0) )
+    timer = timer_font.render(str("{0:.5f}".format(time)) + " yr", 2, text_col)
+    win.blit(timer, (win_size - time_box_width - tick_len - rect_pad,
+                     win_size - tick_len - rect_pad - timer.get_height()) )
 
 
-def initialise_display(win_size, box_size, tick_num, tick_len, time):
+def initialise_display(win_size, box_size, tick_num, tick_len, time=0):
     """
     Initialise the window that everything will be displayed in.
     Creates a screen using pygame. Initialises the background and 
@@ -147,57 +149,79 @@ def initialise_display(win_size, box_size, tick_num, tick_len, time):
         The window that everything will be displayed in.
     """
 
+    background = (255, 255, 255)  # White
+
     pyg.init()
     win = pyg.display.set_mode((win_size,win_size))
-    win.fill((255,255,255))
+    win.fill(background)
     pyg.display.set_caption("N-Body 3D gravitational Simulator")
 
     draw_axes(win, win_size, box_size, tick_num, tick_len)
-    time_display(win, time, win_size, tick_len)
+    time_display(win, time, win_size, tick_len, background)
     pyg.display.flip() 
 
-    return win
+    return win, background
 
 
 def main():
 
-    win_size = 1000
-    box_size = 1000 * C.XRSUN
-    tick_num = 10
-    tick_len = 20
-    time = 0
+    # Add the arguments for the user
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--boxsize", help="The dimentions of the box in solar \
+                         radii. Default: 1000", type=int)
+    parser.add_argument("--timestep", help="The length of the time step \
+                         between calculations. Default: 1 day", type=float)
+    parser.add_argument("--winsize", help="The height and width of the \
+                         window in pixels. Default: 1000", type=int)
+    parser.add_argument("--ticknum", help="The number of ticks on each side \
+                         of the window. Default: 10", type=int)
+    parser.add_argument("--ticklen", help="The length of each tick on the \
+                         side of the window in pixels. Default: 20", type=int)
 
-    win = initialise_display(win_size, box_size, tick_num, tick_len, time)
+    args = parser.parse_args()
+
+    # Setup defaults and read arguments
+    if args.winsize:
+        win_size = args.winsize
+    else:
+        win_size = 1000
+
+    if args.boxsize:
+        box_size = args.boxsize * C.XRSUN
+        scale = win_size / box_size
+    else:
+        box_size = 1000 * C.XRSUN
+        scale = win_size / box_size
+
+    if args.timestep:
+        time_step = args.timestep
+    else:
+        time_step = C.XDAY / 10  # 0.1 day in seconds
+
+    if args.ticknum:
+        tick_num = args.ticknum
+    else:
+        tick_num = 10
+
+    if args.ticklen:
+        tick_len = args.ticklen
+    else:
+        tick_len = 20
+
+
+
+    win, background = initialise_display(win_size, box_size, tick_num, tick_len)
 
     Plist = [Particle(win, [500, 200, 300], [0, 0, 0], 10, 10, 0)]
 
     running = True
     while running:
-        time += 1
         pyg.display.flip()  # Refresh Display
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        # Check of the close button is pushed and Quit if so.
         for event in pyg.event.get():
             if event.type == pyg.QUIT:
                 running = False
