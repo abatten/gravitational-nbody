@@ -79,19 +79,19 @@ def find_acceleration(Particle_list):
     """   
 
 
-def draw_axes(win, win_size, box_size, tick_num, tick_len):
+def draw_axes(win, WINSIZE, BOXSIZE, TICKNUM, TICKLEN):
     """
     Draws the grid lines and labels around the outside of the box.
 
     Parameters
     ----------
-    win_size : int
+    WINSIZE : int
         The height and width of the window to be created.
-    box_size : int
+    BOXSIZE : int
         The hight and width of the window in physical units.
-    tick_num : int
+    TICKNUM : int
         The number of tick marks along each edge of the window.
-    tick_len : int
+    TICKLEN : int
         The length of with tick mark in pixels.
     
     Returns
@@ -99,41 +99,41 @@ def draw_axes(win, win_size, box_size, tick_num, tick_len):
     NONE   
     """
 
-    tick_jump = box_size / tick_num  # Value difference between axis labels
-    tick_space = win_size / tick_num  # Physical distance bwtween axis labels
-    tick_colour = 0x000000  # Black
+    TICKJUMP = BOXSIZE / TICKNUM  # Value difference between axis labels
+    TICKSPACE = WINSIZE / TICKNUM  # Physical distance bwtween axis labels
+    TICKCOLOUR = 0x000000  # Black
 
     # Draw the tick marks
-    for i in range(tick_num):
+    for i in range(TICKNUM):
 
         #  Left Ticks
-        pyg.draw.line(win, tick_colour, (0, i * tick_space),
-                          (tick_len, i * tick_space), 2)
+        pyg.draw.line(win, TICKCOLOUR, (0, i * TICKSPACE),
+                          (TICKLEN, i * TICKSPACE), 2)
         #  Right Ticks
-        pyg.draw.line(win, tick_colour, (win_size - tick_len, i * tick_space),
-                          (win_size, i * tick_space), 2)
+        pyg.draw.line(win, TICKCOLOUR, (WINSIZE - TICKLEN, i * TICKSPACE),
+                          (WINSIZE, i * TICKSPACE), 2)
         #  Top Ticks
-        pyg.draw.line(win, tick_colour, (i * tick_space, 0),
-                          (i * tick_space, tick_len), 2)
+        pyg.draw.line(win, TICKCOLOUR, (i * TICKSPACE, 0),
+                          (i * TICKSPACE, TICKLEN), 2)
         # Bottom Ticks
-        pyg.draw.line(win, tick_colour, (i * tick_space, win_size - tick_len),
-                          (i * tick_space, win_size), 2)      
+        pyg.draw.line(win, TICKCOLOUR, (i * TICKSPACE, WINSIZE - TICKLEN),
+                          (i * TICKSPACE, WINSIZE), 2)      
 
     #  Font Type    
     tick_font = pyg.font.SysFont("monospace", 13)
 
-    for i in range(tick_num -1):
+    for i in range(TICKNUM -1):
         #  Create Labels
-        label = tick_font.render(str("{0:.1f}".format((i + 1) * tick_jump / C.XRSUN)) + "Rsun", 2, (0,0,0))
+        label = tick_font.render(str("{0:.1f}".format((i + 1) * TICKJUMP / C.XRSUN)) + "Rsun", 2, (0,0,0))
 
         #  Display Left Ticks
-        win.blit(label, (tick_len + 5, (i+1) * tick_space - label.get_height() / 2.0 ))
+        win.blit(label, (TICKLEN + 5, (i+1) * TICKSPACE - label.get_height() / 2.0 ))
 
         #  Display Top Ticks
-        win.blit(label, ((i+1) * tick_space - label.get_width() / 2.0, tick_len + 5))
+        win.blit(label, ((i+1) * TICKSPACE - label.get_width() / 2.0, TICKLEN + 5))
 
 
-def time_display(win, time, win_size, tick_len, background):
+def time_display(win, time, WINSIZE, TICKLEN, BACKCOLOUR):
     """
     Create Time Box in lower right hand corner.
 
@@ -141,9 +141,9 @@ def time_display(win, time, win_size, tick_len, background):
     The time is specified to 5 decimal places.
     Parameters
     ----------
-    win_size : int
+    WINSIZE : int
         The height and width of the window to be created.
-    tick_len : int
+    TICKLEN : int
         The length of with tick mark in pixels.
     
     Returns
@@ -151,41 +151,40 @@ def time_display(win, time, win_size, tick_len, background):
     NONE
     """
 
-    time_box_width = 90  
-    time_box_height = 20
-    rect_col = background #rect_col = 0xFF0000  # White
+    TIMEBOX_WIDTH = 90  
+    TIMEBOX_HEIGHT = 20
     text_col = (0,0,0)   # Black
-    rect_pad = 20  # Padding around the ticks
+    RECT_PAD = 20  # Padding around the ticks
 
 
     #  rect(x,y, width, height, fill=True)
-    pyg.draw.rect(win, rect_col,(win_size - time_box_width - tick_len - rect_pad,
-                                 win_size - time_box_height - tick_len - rect_pad,
-                                    time_box_width,
-                                    time_box_height), 0)
+    pyg.draw.rect(win, BACKCOLOUR, (WINSIZE - TIMEBOX_WIDTH - TICKLEN - RECT_PAD,
+                                    WINSIZE - TIMEBOX_HEIGHT - TICKLEN - RECT_PAD,
+                                    TIMEBOX_WIDTH,
+                                    TIMEBOX_HEIGHT), 0)
 
     timer_font = pyg.font.SysFont("monospace", 15)
     timer = timer_font.render(str("{0:.5f}".format(time)) + " yr", 2, text_col)
-    win.blit(timer, (win_size - time_box_width - tick_len - rect_pad,
-                     win_size - tick_len - rect_pad - timer.get_height()) )
+    win.blit(timer, (WINSIZE - TIMEBOX_WIDTH - TICKLEN - RECT_PAD,
+                     WINSIZE - TICKLEN - RECT_PAD - timer.get_height()) )
 
 
-def initialise_display(win_size, box_size, tick_num, tick_len, time=0):
+def initialise_display(WINSIZE, BOXSIZE, TICKNUM, TICKLEN, time=0):
     """
     Initialise the window that everything will be displayed in.
 
-    Creates a screen using pygame. Initialises the background and 
+    Creates a screen using pygame. Initialises the BACKCOLOUR and 
     draws axes along each edge and displays the current time in the 
     bottom right hand corner.
     Parameters
     ----------
-    win_size : int
+    WINSIZE : int
         The height and width of the window to be created.
-    box_size : int
+    BOXSIZE : int
         The hight and width of the window in physical units.
-    tick_num : int
+    TICKNUM : int
         The number of tick marks along each edge of the window.
-    tick_len : int
+    TICKLEN : int
         The length of with tick mark in pixels.
     time : float
         The initial time to print in the bottom right hand corner.
@@ -193,20 +192,22 @@ def initialise_display(win_size, box_size, tick_num, tick_len, time=0):
     -------
     win : pygame.display
         The window that everything will be displayed in.
+    BACKCOLOUR : tuple
+        The colour of the background
     """
 
-    background = (255, 255, 255)  # White
+    BACKCOLOUR = (255, 255, 255)  # White
 
     pyg.init()
-    win = pyg.display.set_mode((win_size,win_size))
-    win.fill(background)
-    pyg.display.set_caption("N-Body 3D gravitational Simulator")
+    win = pyg.display.set_mode((WINSIZE,WINSIZE))
+    win.fill(BACKCOLOUR)
+    pyg.display.set_caption("3D n-Body Gravitational Simulator")
 
-    draw_axes(win, win_size, box_size, tick_num, tick_len)
-    time_display(win, time, win_size, tick_len, background)
+    draw_axes(win, WINSIZE, BOXSIZE, TICKNUM, TICKLEN)
+    time_display(win, time, WINSIZE, TICKLEN, BACKCOLOUR)
     pyg.display.flip() 
 
-    return win, background
+    return win, BACKCOLOUR
 
 
 def read_args():
@@ -225,18 +226,16 @@ def read_args():
 
     Returns
     -------
-    win_size : int
+    WINSIZE : int
         The height and width of the window to be created.
-    box_size : int
+    BOXSIZE : int
         The hight and width of the window in physical units.
-    scale : float
-        The ratio between the win_size and the box_size. 
-    tick_num : int
+    SCALE : float
+        The ratio between the WINSIZE and the BOXSIZE. 
+    TICKNUM : int
         The number of tick marks along each edge of the window.
-    tick_len : int
+    TICKLEN : int
         The length of with tick mark in pixels.
-    time : float
-        The initial time to print in the bottom right hand corner.
     """
 
     # Add the arguments for the user
@@ -256,39 +255,39 @@ def read_args():
 
     # Setup defaults and read arguments
     if args.winsize:
-        win_size = args.winsize
+        WINSIZE = args.winsize
     else:
-        win_size = 1000
+        WINSIZE = 1000
 
     if args.boxsize:
-        box_size = args.boxsize * C.XRSUN
-        scale = win_size / box_size
+        BOXSIZE = args.boxsize * C.XRSUN
+        SCALE = WINSIZE / BOXSIZE
     else:
-        box_size = 1000 * C.XRSUN
-        scale = win_size / box_size
+        BOXSIZE = 1000 * C.XRSUN
+        SCALE = WINSIZE / BOXSIZE
 
     if args.timestep:
-        time_step = args.timestep
+        TIMESTEP = args.timestep
     else:
-        time_step = C.XDAY / 10  # 0.1 day in seconds
+        TIMESTEP = C.XDAY / 10  # 0.1 day in seconds
 
     if args.ticknum:
-        tick_num = args.ticknum
+        TICKNUM = args.ticknum
     else:
-        tick_num = 10
+        TICKNUM = 10
 
     if args.ticklen:
-        tick_len = args.ticklen
+        TICKLEN = args.ticklen
     else:
-        tick_len = 20   
+        TICKLEN = 20   
 
-    return win_size, box_size, scale, time_step, tick_num, tick_len
+    return WINSIZE, BOXSIZE, SCALE, TIMESTEP, TICKNUM, TICKLEN
 
 def main():
 
-    win_size, box_size, scale, time_step, tick_num, tick_len = read_args()
+    WINSIZE, BOXSIZE, SCALE, TIMESTEP, TICKNUM, TICKLEN = read_args()
 
-    win, background = initialise_display(win_size, box_size, tick_num, tick_len)
+    win, BACKCOLOUR = initialise_display(WINSIZE, BOXSIZE, TICKNUM, TICKLEN)
 
     Plist = [Particle(win, [500, 200, 300], [0, 0, 0], 10, 4, 0, (255,0,0)),
              Particle(win, [300, 100, 400], [0, 0, 0], 10, 4, 0, (0,255,0))]
