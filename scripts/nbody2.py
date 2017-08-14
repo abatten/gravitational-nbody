@@ -4,7 +4,7 @@ import numpy as np
 import argparse
 import sys
 import os
-import configparser as config 
+import configparser 
 
 import constants as C
 
@@ -23,24 +23,21 @@ class Particle:
     mas : float
         Mass of the particle.
         Unit Msun
-    dex : int
-        Index of the particle
     col : (int, int, int)
         Colour of the particle
 
     """
-    def __init__(self, win, init_pos, init_vel, mass=1, rad=1, dex=0, col=(0,0,0)):
+    def __init__(self, win, init_pos, init_vel, mass=1, rad=4, col=(0,0,0)):
         self.pos = [x * C.XRSUN for x in init_pos] # Conver to meters
         self.vel = [v * C.XKM for v in init_vel]  # Convert to meters
         self.mas = mass * C.XMSUN  # Convert to kilograms
         self.rad = rad #* C.XRSUN  #  Convert to meters
-        self.dex = dex
         self.col = col
 
 
     def __repr__(self):
-        return ('Position:{x} Velocity:{v} Mass:{m} Radius:{r} Index:{d} Colour:{c}'.format(
-                x=self.pos, v=self.vel, m=self.mas, r=self.rad, d=self.dex, c=self.col))
+        return ('Position:{x} Velocity:{v} Mass:{m} Radius:{r} Colour:{c}'.format(
+                x=self.pos, v=self.vel, m=self.mas, r=self.rad, c=self.col))
 
 
     def draw(self, win, SCALE):
@@ -386,6 +383,7 @@ def read_args():
 
     # Add the arguments for the user
     parser = argparse.ArgumentParser()
+    parser.add_argument("param", help="The parameter file.")
     parser.add_argument("--boxsize", help="The height/width of the physical box. \
                         Unit: solar radii, Default 1000.", type=int)
     parser.add_argument("--timestep", help="The length of the time step \
@@ -401,6 +399,12 @@ def read_args():
     args = parser.parse_args()
 
     # Setup defaults and read arguments
+    if args.param:
+        param = args.param
+    else:
+        print("NO PARAMETER FILE!")
+        sys.exit(0)
+
     if args.winsize:
         WINSIZE = args.winsize
     else:
@@ -428,25 +432,56 @@ def read_args():
     else:
         TICKLEN = 20   
 
-    return WINSIZE, BOXSIZE, SCALE, TIMESTEP, TICKNUM, TICKLEN
+    return param, WINSIZE, BOXSIZE, SCALE, TIMESTEP, TICKNUM, TICKLEN
 
+
+def read_param_file(win, file):
+    config = configparser.ConfigParser()
+    config.readfp(open(file), 'r')
+
+    pList = []
+    for i in config.sections():
+        if ('particle', 'True') in config.items(i):
+            for (key, val) in config.items(i):
+                if key == "position":
+                    #pos = val
+                    print("pos yes")
+                    pos = val
+                    print(pos[0])
+                elif key == "velocity":
+                    print("vel yes")
+                    vel = val
+                elif key == "mass":
+                    print("mass yes")
+                    mass = float(val)
+                elif key == "radius":
+                    print("rad yes")
+                    rad = int(val)
+                elif key == "colour":
+                    print("col yes")
+                    col = val
+#            pList.append(Particle(win, pos, vel, mass, rad, col))
+#                print(pList[i])
 def main():
 
-    WINSIZE, BOXSIZE, SCALE, TIMESTEP, TICKNUM, TICKLEN = read_args()
+    param, WINSIZE, BOXSIZE, SCALE, TIMESTEP, TICKNUM, TICKLEN = read_args()
+
+
 
     win, BACKCOLOUR = initialise_display(WINSIZE, BOXSIZE, TICKNUM, TICKLEN)
 
-    print(BOXSIZE/(2*C.XRSUN))
+    particle_list = read_param_file(win, param) 
 
-    Plist = [Particle(win, [BOXSIZE/(2*C.XRSUN) + 0.0000, BOXSIZE/(2*C.XRSUN), 0], [0,   0,    0], 1, 10, 1, (255,255,0)), # Sun
-             Particle(win, [BOXSIZE/(2*C.XRSUN) + 66.120, BOXSIZE/(2*C.XRSUN), 0], [0, -58.98, 0], 0.000000165, 4, 1, (105,105,105)), # Mercury
-             Particle(win, [BOXSIZE/(2*C.XRSUN) + 154.50, BOXSIZE/(2*C.XRSUN), 0], [0, -35.26, 0], 0.000002447, 4, 1, (210,105,30)), # Venus
-             Particle(win, [BOXSIZE/(2*C.XRSUN) + 211.40, BOXSIZE/(2*C.XRSUN), 0], [0, -30.29, 0], 0.000003003, 4, 0, (0,255,0)), # Earth
-             Particle(win, [BOXSIZE/(2*C.XRSUN) + 297.00, BOXSIZE/(2*C.XRSUN), 0], [0, -26.50, 0], 0.000000321, 4, 1, (255,0,0))]#, # Mars
-             #Particle(win, [BOXSIZE/(2*C.XRSUN) + 1064.4, BOXSIZE/(2*C.XRSUN), 0], [0, -13.72, 0], 0.0009543, 4, 0, (160,82,45)),  # Jupiter
-             #Particle(win, [BOXSIZE/(2*C.XRSUN) + 1944.2, BOXSIZE/(2*C.XRSUN), 0], [0, -10.18, 0], 0.0002857, 4, 0, (102,102,0)),  # Saturn
-             #Particle(win, [BOXSIZE/(2*C.XRSUN) + 3940.3, BOXSIZE/(2*C.XRSUN), 0], [0, -7.110, 0], 0.00004364, 4, 0, (102,255,170)),  # Uranus
-             #Particle(win, [BOXSIZE/(2*C.XRSUN) + 6388.5, BOXSIZE/(2*C.XRSUN), 0], [0, -5.500, 0], 0.00005149, 4, 0, (0,0,255))]  # Neptune
+
+    Plist = [Particle(win, [BOXSIZE/(2*C.XRSUN) + 0.0000, BOXSIZE/(2*C.XRSUN), 0], [0,   0,    0], 1, 10, (255,255,0)), # Sun
+             Particle(win, [BOXSIZE/(2*C.XRSUN) + 66.120, BOXSIZE/(2*C.XRSUN), 0], [0, -58.98, 0], 0.000000165, 4, (105,105,105)), # Mercury
+             Particle(win, [BOXSIZE/(2*C.XRSUN) + 154.50, BOXSIZE/(2*C.XRSUN), 0], [0, -35.26, 0], 0.000002447, 4, (210,105,30)), # Venus
+             Particle(win, [BOXSIZE/(2*C.XRSUN) + 211.40, BOXSIZE/(2*C.XRSUN), 0], [0, -30.29, 0], 0.000003003, 4, (0,255,0)), # Earth
+             Particle(win, [BOXSIZE/(2*C.XRSUN) + 297.00, BOXSIZE/(2*C.XRSUN), 0], [0, -26.50, 0], 0.000000321, 4, (255,0,0))]#, # Mars
+             #Particle(win, [BOXSIZE/(2*C.XRSUN) + 1064.4, BOXSIZE/(2*C.XRSUN), 0], [0, -13.72, 0], 0.0009543, 4, (160,82,45)),  # Jupiter
+             #Particle(win, [BOXSIZE/(2*C.XRSUN) + 1944.2, BOXSIZE/(2*C.XRSUN), 0], [0, -10.18, 0], 0.0002857, 4, (102,102,0)),  # Saturn
+             #Particle(win, [BOXSIZE/(2*C.XRSUN) + 3940.3, BOXSIZE/(2*C.XRSUN), 0], [0, -7.110, 0], 0.00004364, 4, (102,255,170)),  # Uranus
+             #Particle(win, [BOXSIZE/(2*C.XRSUN) + 6388.5, BOXSIZE/(2*C.XRSUN), 0], [0, -5.500, 0], 0.00005149, 4, (0,0,255))]  # Neptune
              #]
 
     time = 0
