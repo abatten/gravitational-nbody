@@ -128,9 +128,26 @@ class Particle:
 
 def rk4(particle, particleList, dt):
     """
-    particle : Initial Position
-    particleList : Initial Velocity
-    a : acceleration
+    Returns the position and velocity of a particle after a given timestep.
+
+    Finds the new position and velocity of a particle by using the 
+    Runge-Kutta method (RK4).  
+
+    Parameters
+    ----------
+    particle : Particle
+        The particle whose position and velosities are to be updated.
+    particleList : List
+        The list of all gravitating particles in the simulation.
+    dt : float
+        The timestep to increase by.
+
+    Returns
+    -------
+    new_pos : [float, float, float]
+        The cordinates of the new position of the particle.
+    new_vel : [float, float, float]
+        The components of the new velocity of the particle.
     """
     #  Current Velocity   
     vx1 = particle.vel[0]
@@ -280,7 +297,7 @@ def time_display(win, time, WINSIZE, TICKLEN, BACKCOLOUR):
     NONE
     """
 
-    TIMEBOX_WIDTH = 90  
+    TIMEBOX_WIDTH = 110  
     TIMEBOX_HEIGHT = 20
     TEXTCOLOUR = (0,0,0)   # Black
     RECT_PAD = 20  # Padding around the ticks
@@ -368,12 +385,12 @@ def read_args():
     """
 
     # Add the arguments for the user
-    print("Reading")
     parser = argparse.ArgumentParser()
-    parser.add_argument("--boxsize", help="The dimentions of the box in solar \
-                         radii. Default: 1000", type=int)
+    parser.add_argument("--boxsize", help="The height/width of the physical box. \
+                        Unit: solar radii, Default 1000.", type=int)
     parser.add_argument("--timestep", help="The length of the time step \
-                         between calculations. Default: 1 day", type=float)
+                         between calculations. \
+                         Unit: seconds, Default: 8640 (0.1 days).", type=float)
     parser.add_argument("--winsize", help="The height and width of the \
                          window in pixels. Default: 1000", type=int)
     parser.add_argument("--ticknum", help="The number of ticks on each side \
@@ -399,7 +416,7 @@ def read_args():
     if args.timestep:
         TIMESTEP = args.timestep
     else:
-        TIMESTEP = C.XDAY   # 1 day in seconds
+        TIMESTEP = C.XDAY / 100  # 1 day in seconds
 
     if args.ticknum:
         TICKNUM = args.ticknum
@@ -419,9 +436,18 @@ def main():
 
     win, BACKCOLOUR = initialise_display(WINSIZE, BOXSIZE, TICKNUM, TICKLEN)
 
-    Plist = [Particle(win, [2973+1000, 2500+4000, 0], [0, -59.85, 0], 2, 4, 0, (255,0,0)),
-             Particle(win, [2500+1000,2500+4000,0], [0,6.65, 0], 15, 4, 0, (0,255,0)),
-             Particle(win, [4500+1000, 2500+4000, 0], [0, -36.79, 0], 2, 4, 0, (0,0,255))]
+    print(BOXSIZE/(2*C.XRSUN))
+
+    Plist = [Particle(win, [BOXSIZE/(2*C.XRSUN) + 0.0000, BOXSIZE/(2*C.XRSUN), 0], [0,   0,    0], 1, 10, 1, (255,255,0)), # Sun
+             Particle(win, [BOXSIZE/(2*C.XRSUN) + 66.120, BOXSIZE/(2*C.XRSUN), 0], [0, -58.98, 0], 0.000000165, 4, 1, (105,105,105)), # Mercury
+             Particle(win, [BOXSIZE/(2*C.XRSUN) + 154.50, BOXSIZE/(2*C.XRSUN), 0], [0, -35.26, 0], 0.000002447, 4, 1, (210,105,30)), # Venus
+             Particle(win, [BOXSIZE/(2*C.XRSUN) + 211.40, BOXSIZE/(2*C.XRSUN), 0], [0, -30.29, 0], 0.000003003, 4, 0, (0,255,0)), # Earth
+             Particle(win, [BOXSIZE/(2*C.XRSUN) + 297.00, BOXSIZE/(2*C.XRSUN), 0], [0, -26.50, 0], 0.000000321, 4, 1, (255,0,0))]#, # Mars
+             #Particle(win, [BOXSIZE/(2*C.XRSUN) + 1064.4, BOXSIZE/(2*C.XRSUN), 0], [0, -13.72, 0], 0.0009543, 4, 0, (160,82,45)),  # Jupiter
+             #Particle(win, [BOXSIZE/(2*C.XRSUN) + 1944.2, BOXSIZE/(2*C.XRSUN), 0], [0, -10.18, 0], 0.0002857, 4, 0, (102,102,0)),  # Saturn
+             #Particle(win, [BOXSIZE/(2*C.XRSUN) + 3940.3, BOXSIZE/(2*C.XRSUN), 0], [0, -7.110, 0], 0.00004364, 4, 0, (102,255,170)),  # Uranus
+             #Particle(win, [BOXSIZE/(2*C.XRSUN) + 6388.5, BOXSIZE/(2*C.XRSUN), 0], [0, -5.500, 0], 0.00005149, 4, 0, (0,0,255))]  # Neptune
+             #]
 
     time = 0
     running = True
