@@ -14,6 +14,8 @@ class Particle:
 
     Parameters
     ----------
+    win : pygame.display
+        The display that the particle will be displayed in.
     pos : [float, float, float]
         The particle position in the window
         Unit: Rsun
@@ -23,6 +25,9 @@ class Particle:
     mas : float
         Mass of the particle.
         Unit Msun
+    rad : int
+        The radius pf the particle on the screen.
+        Unit: pixels
     col : (int, int, int)
         Colour of the particle
 
@@ -36,7 +41,7 @@ class Particle:
 
 
     def __repr__(self):
-        return ('Position:{x} Velocity:{v} Mass:{m} Radius:{r} Colour:{c}'.format(
+        return ('Pos:{x} Vel:{v} Mass:{m} Rad:{r} Colour:{c}'.format(
                 x=self.pos, v=self.vel, m=self.mas, r=self.rad, c=self.col))
 
 
@@ -103,9 +108,10 @@ class Particle:
         ax = 0
         ay = 0
         az = 0
-
+        potential = 0
         for p1 in particleList:
             if p1 is not self:
+
                 dX = (p1.pos[0] - position[0])
                 dY = (p1.pos[1] - position[1])
                 dZ = (p1.pos[2] - position[2])
@@ -147,62 +153,62 @@ def rk4(particle, particleList, dt):
         The components of the new velocity of the particle.
     """
     #  Current Velocity   
-    vx1 = particle.vel[0]
-    vy1 = particle.vel[1]
-    vz1 = particle.vel[2]
+    kvx1 = particle.vel[0]
+    kvy1 = particle.vel[1]
+    kvz1 = particle.vel[2]
 
     #  Current Position
-    px1 = particle.pos[0] 
-    py1 = particle.pos[1] 
-    pz1 = particle.pos[2] 
+    kpx1 = particle.pos[0] 
+    kpy1 = particle.pos[1] 
+    kpz1 = particle.pos[2] 
 
     #  Current Acceleration
-    ax1, ay1, az1 = particle.acceleration([px1, py1, pz1], particleList)
+    kax1, kay1, kaz1 = particle.acceleration([kpx1, kpy1, kpz1], particleList)
 
     #  Step 2
-    vx2 = vx1 + 0.5 * dt * ax1
-    vy2 = vy1 + 0.5 * dt * ay1
-    vz2 = vz1 + 0.5 * dt * az1
+    kvx2 = kvx1 + 0.5 * dt * kax1
+    kvy2 = kvy1 + 0.5 * dt * kay1
+    kvz2 = kvz1 + 0.5 * dt * kaz1
 
-    px2 = px1 + 0.5 * dt * vx2
-    py2 = py1 + 0.5 * dt * vy2
-    pz2 = pz1 + 0.5 * dt * vz2
+    kpx2 = kpx1 + 0.5 * dt * kvx2
+    kpy2 = kpy1 + 0.5 * dt * kvy2
+    kpz2 = kpz1 + 0.5 * dt * kvz2
 
-    ax2, ay2, az2 = particle.acceleration([px2, py2, pz2], particleList)
+    kax2, kay2, kaz2 = particle.acceleration([kpx2, kpy2, kpz2], particleList)
 
     #  Step 3
-    vx3 = vx1 + 0.5 * dt * ax2
-    vy3 = vy1 + 0.5 * dt * ay2
-    vz3 = vz1 + 0.5 * dt * az2
+    kvx3 = kvx1 + 0.5 * dt * kax2
+    kvy3 = kvy1 + 0.5 * dt * kay2
+    kvz3 = kvz1 + 0.5 * dt * kaz2
 
-    px3 = px1 + 0.5 * dt * vx3
-    py3 = py1 + 0.5 * dt * vy3
-    pz3 = pz1 + 0.5 * dt * vz3
+    kpx3 = kpx1 + 0.5 * dt * kvx3
+    kpy3 = kpy1 + 0.5 * dt * kvy3
+    kpz3 = kpz1 + 0.5 * dt * kvz3
 
-    ax3, ay3, az3 = particle.acceleration([px3, py3, pz3], particleList)
+    kax3, kay3, kaz3 = particle.acceleration([kpx3, kpy3, kpz3], particleList)
 
     #  Step 4
-    vx4 = vx1 + 0.5 * dt * ax3
-    vy4 = vy1 + 0.5 * dt * ay3
-    vz4 = vz1 + 0.5 * dt * az3
+    kvx4 = kvx1 +  dt * kax3
+    kvy4 = kvy1 +  dt * kay3
+    kvz4 = kvz1 +  dt * kaz3
 
-    px4 = px1 + 0.5 * dt * vx4
-    py4 = py1 + 0.5 * dt * vy4
-    pz4 = pz1 + 0.5 * dt * vz4
+    kpx4 = kpx1 +  dt * kvx4
+    kpy4 = kpy1 +  dt * kvy4
+    kpz4 = kpz1 +  dt * kvz4
 
-    ax4, ay4, az4 = particle.acceleration([px3, py3, pz3], particleList)
+    kax4, kay4, kaz4 = particle.acceleration([kpx3, kpy3, kpz3], particleList)
 
     #  Final positions and velocities
-    new_vx = vx1 + (1.0/6.0) * dt * (ax1 + 2 * (ax2 + ax3) + ax4)
-    new_vy = vy1 + (1.0/6.0) * dt * (ay1 + 2 * (ay2 + ay3) + ay4)
-    new_vz = vz1 + (1.0/6.0) * dt * (az1 + 2 * (az2 + az3) + az4)
+    newvx = particle.vel[0] + (1./6.) * dt * (kax1 + 2 * (kax2 + kax3) + kax4)
+    newvy = particle.vel[1] + (1./6.) * dt * (kay1 + 2 * (kay2 + kay3) + kay4)
+    newvz = particle.vel[2] + (1./6.) * dt * (kaz1 + 2 * (kaz2 + kaz3) + kaz4)
 
-    new_px = px1 + (1.0/6.0) * dt * (vx1 + 2 * (vx2 + vx3) + vx4)
-    new_py = py1 + (1.0/6.0) * dt * (vy1 + 2 * (vy2 + vy3) + vy4)
-    new_pz = pz1 + (1.0/6.0) * dt * (vz1 + 2 * (vz2 + vz3) + vz4)
+    newpx = particle.pos[0] + (1./6.) * dt * (kvx1 + 2 * (kvx2 + kvx3) + kvx4)
+    newpy = particle.pos[1] + (1./6.) * dt * (kvy1 + 2 * (kvy2 + kvy3) + kvy4)
+    newpz = particle.pos[2] + (1./6.) * dt * (kvz1 + 2 * (kvz2 + kvz3) + kvz4)
   
-    new_vel = [new_vx, new_vy, new_vz]
-    new_pos = [new_px, new_py, new_pz]
+    new_vel = [newvx, newvy, newvz]
+    new_pos = [newpx, newpy, newpz]
 
     return new_pos, new_vel
 
@@ -434,7 +440,7 @@ def read_args():
 
     return param, WINSIZE, BOXSIZE, SCALE, TIMESTEP, TICKNUM, TICKLEN
 
-
+### WORK IN PROGRESS
 def read_param_file(win, file):
     config = configparser.ConfigParser()
     config.readfp(open(file), 'r')
