@@ -16,7 +16,7 @@ YKG = 1000              # Kilogram (g)
 XMSUN = 1.9886e30       # Solar Mass (kg)
 YMSUN = 1.9886e33       # Solar mass (g)
 XRSUN = 6.957e8         # Solar Radius (m)
-YRSUN = 6.957e11        # Solar Radius (cm)
+YRSUN = 6.957e10        # Solar Radius (cm)
 XLSUN = 3.839e26        # Solar Luminosity (W)
 YLSUN = 3.839e33        # Solar Luminosity (ergs/s)
 
@@ -38,7 +38,7 @@ XMHYD = 1.6735325e-27   # Mass of Hydrogen Atom (kg)
 YMHYD = 1.6735325e-24   # Mass of Hydrogen Atom (g)
 
 XKM = 1.0e3             # 1 kilometer (m)
-YKM = 1.0e4             # 1 kilometer (cm)
+YKM = 1.0e5             # 1 kilometer (cm)
 XCM = 0.01              # 1 centimeter (m)
 YM = 100                # 1 meter (cm)
 
