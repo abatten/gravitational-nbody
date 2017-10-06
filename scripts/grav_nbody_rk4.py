@@ -33,8 +33,8 @@ class Particle:
 
     """
     def __init__(self, win, init_pos, init_vel, mass=1, rad=4, col=(0,0,0)):
-        self.pos = [x * C.XRSUN for x in init_pos] # Conver to meters
-        self.vel = [v * C.XKM for v in init_vel]  # Convert to meters
+        self.pos = np.array([x * C.XRSUN for x in init_pos]) # Conver to meters
+        self.vel = np.array([v * C.XKM for v in init_vel])  # Convert to meters
         self.mas = mass * C.XMSUN  # Convert to kilograms
         self.rad = rad #* C.XRSUN  #  Convert to meters
         self.col = col
@@ -58,7 +58,9 @@ class Particle:
         -------
         NONE
         """
-        pyg.draw.circle(win, self.col, (int(self.pos[0]/C.XRSUN*SCALE), int(self.pos[1]/C.XRSUN*SCALE)), int(self.rad*SCALE) + 2 , 0)
+        pyg.draw.circle(win, self.col, (int(self.pos[0]/C.XRSUN*SCALE), 
+                                        int(self.pos[1]/C.XRSUN*SCALE)), 
+                                        int(self.rad*SCALE) + 2 , 0)
 
 
     def dist_to(self, other):
@@ -76,15 +78,7 @@ class Particle:
             The distance between the two particles   
         """
 
-        x1 = self.pos[0]
-        y1 = self.pos[1]
-        z1 = self.pos[2]
-
-        x2 = other.pos[0]
-        y2 = other.pos[1]
-        z2 = other.pos[2]
-
-        dist = np.sqrt((x1 - x2)**2.0 + (y1 - y2)**2.0 + (z1 - z2)**2.0)
+        dist = np.linalg.norm(self.pos - other.pos)
 
         return dist
 
@@ -102,32 +96,21 @@ class Particle:
     
         Returns
         -------
-        a : [float, float, float]
+        a : numpy.array [float, float, float]
             The acceleration comppnents on the particle   
         """   
-        ax = 0
-        ay = 0
-        az = 0
-        potential = 0
+        a = np.zeros(3)
         for p1 in particleList:
             if p1 is not self:
+                delta = p1.pos - position
+                dist = self.dist_to(p1)
+                dsquared = dist**2.0
 
-                dX = (p1.pos[0] - position[0])
-                dY = (p1.pos[1] - position[1])
-                dZ = (p1.pos[2] - position[2])
-
-                d = self.dist_to(p1)
-                dsquared = d**2.0
-
-                #  C.XG is Gravitational Strength
+                #  C.XG is the Gravitational Constant
                 Force = C.XG * self.mas * p1.mas / dsquared
-                ax += (Force / self.mas) * (dX / d)
-                ay += (Force / self.mas) * (dY / d)
-                az += (Force / self.mas) * (dZ / d)
+                a += (Force / self.mas) * (delta / dist)
 
-        return ax, ay, az
-
-
+        return a
 
 def rk4(particle, particleList, dt):
     """
@@ -147,68 +130,36 @@ def rk4(particle, particleList, dt):
 
     Returns
     -------
-    new_pos : [float, float, float]
+    new_pos : numpy.array [float, float, float]
         The cordinates of the new position of the particle.
-    new_vel : [float, float, float]
+    new_vel : numpy.array [float, float, float]
         The components of the new velocity of the particle.
     """
-    #  Current Velocity   
-    kvx1 = particle.vel[0]
-    kvy1 = particle.vel[1]
-    kvz1 = particle.vel[2]
-
-    #  Current Position
-    kpx1 = particle.pos[0] 
-    kpy1 = particle.pos[1] 
-    kpz1 = particle.pos[2] 
+    #  Current  Positions and Velocity   
+    kv1 = particle.vel 
+    kp1 = particle.pos
 
     #  Current Acceleration
-    kax1, kay1, kaz1 = particle.acceleration([kpx1, kpy1, kpz1], particleList)
+    ka1 = particle.acceleration(kp1, particleList)
 
     #  Step 2
-    kvx2 = kvx1 + 0.5 * dt * kax1
-    kvy2 = kvy1 + 0.5 * dt * kay1
-    kvz2 = kvz1 + 0.5 * dt * kaz1
-
-    kpx2 = kpx1 + 0.5 * dt * kvx2
-    kpy2 = kpy1 + 0.5 * dt * kvy2
-    kpz2 = kpz1 + 0.5 * dt * kvz2
-
-    kax2, kay2, kaz2 = particle.acceleration([kpx2, kpy2, kpz2], particleList)
+    kv2 = kv1 + 0.5 * dt * ka1
+    kp2 = kp1 + 0.5 * dt * kv2
+    ka2 = particle.acceleration(kp2, particleList)
 
     #  Step 3
-    kvx3 = kvx1 + 0.5 * dt * kax2
-    kvy3 = kvy1 + 0.5 * dt * kay2
-    kvz3 = kvz1 + 0.5 * dt * kaz2
-
-    kpx3 = kpx1 + 0.5 * dt * kvx3
-    kpy3 = kpy1 + 0.5 * dt * kvy3
-    kpz3 = kpz1 + 0.5 * dt * kvz3
-
-    kax3, kay3, kaz3 = particle.acceleration([kpx3, kpy3, kpz3], particleList)
+    kv3 = kv1 + 0.5 * dt * ka2
+    kp3 = kp1 + 0.5 * dt * kv3
+    ka3 = particle.acceleration(kp3, particleList)
 
     #  Step 4
-    kvx4 = kvx1 +  dt * kax3
-    kvy4 = kvy1 +  dt * kay3
-    kvz4 = kvz1 +  dt * kaz3
-
-    kpx4 = kpx1 +  dt * kvx4
-    kpy4 = kpy1 +  dt * kvy4
-    kpz4 = kpz1 +  dt * kvz4
-
-    kax4, kay4, kaz4 = particle.acceleration([kpx3, kpy3, kpz3], particleList)
+    kv4 = kv1 +  dt * ka3
+    kp4 = kp1 +  dt * kv4
+    ka4 = particle.acceleration(kp3, particleList)
 
     #  Final positions and velocities
-    newvx = particle.vel[0] + (1./6.) * dt * (kax1 + 2 * (kax2 + kax3) + kax4)
-    newvy = particle.vel[1] + (1./6.) * dt * (kay1 + 2 * (kay2 + kay3) + kay4)
-    newvz = particle.vel[2] + (1./6.) * dt * (kaz1 + 2 * (kaz2 + kaz3) + kaz4)
-
-    newpx = particle.pos[0] + (1./6.) * dt * (kvx1 + 2 * (kvx2 + kvx3) + kvx4)
-    newpy = particle.pos[1] + (1./6.) * dt * (kvy1 + 2 * (kvy2 + kvy3) + kvy4)
-    newpz = particle.pos[2] + (1./6.) * dt * (kvz1 + 2 * (kvz2 + kvz3) + kvz4)
-  
-    new_vel = [newvx, newvy, newvz]
-    new_pos = [newpx, newpy, newpz]
+    new_vel = kv1 + (1./6.) * dt * (ka1 + 2 * (ka2 + ka3) + ka4)
+    new_pos = kp1 + (1./6.) * dt * (kv1 + 2 * (kv2 + kv3) + kv4)
 
     return new_pos, new_vel
 
@@ -441,33 +392,33 @@ def read_args():
     return param, WINSIZE, BOXSIZE, SCALE, TIMESTEP, TICKNUM, TICKLEN
 
 ### WORK IN PROGRESS
-def read_param_file(win, file):
-    config = configparser.ConfigParser()
-    config.readfp(open(file), 'r')
+# def read_param_file(win, file):
+#     config = configparser.ConfigParser()
+#     config.readfp(open(file), 'r')
 
-    pList = []
-    for i in config.sections():
-        if ('particle', 'True') in config.items(i):
-            for (key, val) in config.items(i):
-                if key == "position":
-                    #pos = val
-                    print("pos yes")
-                    pos = val
-                    print(pos[0])
-                elif key == "velocity":
-                    print("vel yes")
-                    vel = val
-                elif key == "mass":
-                    print("mass yes")
-                    mass = float(val)
-                elif key == "radius":
-                    print("rad yes")
-                    rad = int(val)
-                elif key == "colour":
-                    print("col yes")
-                    col = val
-#            pList.append(Particle(win, pos, vel, mass, rad, col))
-#                print(pList[i])
+#     pList = []
+#     for i in config.sections():
+#         if ('particle', 'True') in config.items(i):
+#             for (key, val) in config.items(i):
+#                 if key == "position":
+#                     #pos = val
+#                     print("pos yes")
+#                     pos = val
+#                     print(pos[1])
+#                 elif key == "velocity":
+#                     print("vel yes")
+#                     vel = val
+#                 elif key == "mass":
+#                     print("mass yes")
+#                     mass = float(val)
+#                 elif key == "radius":
+#                     print("rad yes")
+#                     rad = int(val)
+#                 elif key == "colour":
+#                     print("col yes")
+#                     col = val
+# #            pList.append(Particle(win, pos, vel, mass, rad, col))
+# #                print(pList[i])
 def main():
 
     param, WINSIZE, BOXSIZE, SCALE, TIMESTEP, TICKNUM, TICKLEN = read_args()
@@ -476,19 +427,19 @@ def main():
 
     win, BACKCOLOUR = initialise_display(WINSIZE, BOXSIZE, TICKNUM, TICKLEN)
 
-    particle_list = read_param_file(win, param) 
+    #particle_list = read_param_file(win, param) 
 
 
     Plist = [Particle(win, [BOXSIZE/(2*C.XRSUN) + 0.0000, BOXSIZE/(2*C.XRSUN), 0], [0,   0,    0], 1, 10, (255,255,0)), # Sun
              Particle(win, [BOXSIZE/(2*C.XRSUN) + 66.120, BOXSIZE/(2*C.XRSUN), 0], [0, -58.98, 0], 0.000000165, 4, (105,105,105)), # Mercury
              Particle(win, [BOXSIZE/(2*C.XRSUN) + 154.50, BOXSIZE/(2*C.XRSUN), 0], [0, -35.26, 0], 0.000002447, 4, (210,105,30)), # Venus
              Particle(win, [BOXSIZE/(2*C.XRSUN) + 211.40, BOXSIZE/(2*C.XRSUN), 0], [0, -30.29, 0], 0.000003003, 4, (0,255,0)), # Earth
-             Particle(win, [BOXSIZE/(2*C.XRSUN) + 297.00, BOXSIZE/(2*C.XRSUN), 0], [0, -26.50, 0], 0.000000321, 4, (255,0,0))]#, # Mars
-             #Particle(win, [BOXSIZE/(2*C.XRSUN) + 1064.4, BOXSIZE/(2*C.XRSUN), 0], [0, -13.72, 0], 0.0009543, 4, (160,82,45)),  # Jupiter
-             #Particle(win, [BOXSIZE/(2*C.XRSUN) + 1944.2, BOXSIZE/(2*C.XRSUN), 0], [0, -10.18, 0], 0.0002857, 4, (102,102,0)),  # Saturn
-             #Particle(win, [BOXSIZE/(2*C.XRSUN) + 3940.3, BOXSIZE/(2*C.XRSUN), 0], [0, -7.110, 0], 0.00004364, 4, (102,255,170)),  # Uranus
-             #Particle(win, [BOXSIZE/(2*C.XRSUN) + 6388.5, BOXSIZE/(2*C.XRSUN), 0], [0, -5.500, 0], 0.00005149, 4, (0,0,255))]  # Neptune
-             #]
+             Particle(win, [BOXSIZE/(2*C.XRSUN) + 297.00, BOXSIZE/(2*C.XRSUN), 0], [0, -26.50, 0], 0.000000321, 4, (255,0,0)),#, # Mars
+             Particle(win, [BOXSIZE/(2*C.XRSUN) + 1064.4, BOXSIZE/(2*C.XRSUN), 0], [0, -13.72, 0], 0.0009543, 4, (160,82,45)),  # Jupiter
+             Particle(win, [BOXSIZE/(2*C.XRSUN) + 1944.2, BOXSIZE/(2*C.XRSUN), 0], [0, -10.18, 0], 0.0002857, 4, (102,102,0)),  # Saturn
+             Particle(win, [BOXSIZE/(2*C.XRSUN) + 3940.3, BOXSIZE/(2*C.XRSUN), 0], [0, -7.110, 0], 0.00004364, 4, (102,255,170)),  # Uranus
+             Particle(win, [BOXSIZE/(2*C.XRSUN) + 6388.5, BOXSIZE/(2*C.XRSUN), 0], [0, -5.500, 0], 0.00005149, 4, (0,0,255))]  # Neptune
+             
 
     time = 0
     running = True
