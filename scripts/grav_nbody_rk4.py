@@ -340,7 +340,7 @@ def read_args():
 
     # Add the arguments for the user
     parser = argparse.ArgumentParser()
-    parser.add_argument("param", help="The parameter file.")
+    #parser.add_argument("--param", help="The parameter file.")
     parser.add_argument("--boxsize", help="The height/width of the physical box. \
                         Unit: solar radii, Default 1000.", type=int)
     parser.add_argument("--timestep", help="The length of the time step \
@@ -356,11 +356,11 @@ def read_args():
     args = parser.parse_args()
 
     # Setup defaults and read arguments
-    if args.param:
-        param = args.param
-    else:
-        print("NO PARAMETER FILE!")
-        sys.exit(0)
+    #if args.param:
+    #    param = args.param
+    #else:
+        #print("NO PARAMETER FILE!")
+        #sys.exit(0)
 
     if args.winsize:
         WINSIZE = args.winsize
@@ -377,7 +377,7 @@ def read_args():
     if args.timestep:
         TIMESTEP = args.timestep
     else:
-        TIMESTEP = C.XDAY / 100  # 1 day in seconds
+        TIMESTEP = C.XDAY / 10  # 1 day in seconds
 
     if args.ticknum:
         TICKNUM = args.ticknum
@@ -389,7 +389,7 @@ def read_args():
     else:
         TICKLEN = 20   
 
-    return param, WINSIZE, BOXSIZE, SCALE, TIMESTEP, TICKNUM, TICKLEN
+    return WINSIZE, BOXSIZE, SCALE, TIMESTEP, TICKNUM, TICKLEN
 
 ### WORK IN PROGRESS
 # def read_param_file(win, file):
@@ -421,7 +421,7 @@ def read_args():
 # #                print(pList[i])
 def main():
 
-    param, WINSIZE, BOXSIZE, SCALE, TIMESTEP, TICKNUM, TICKLEN = read_args()
+    WINSIZE, BOXSIZE, SCALE, TIMESTEP, TICKNUM, TICKLEN = read_args()
 
 
 
@@ -429,17 +429,27 @@ def main():
 
     #particle_list = read_param_file(win, param) 
 
+    # SOLAR SYSTEM!!
+    #Plist = [Particle(win, [BOXSIZE/(2*C.XRSUN) + 0.0000, BOXSIZE/(2*C.XRSUN), 0], [0,   0,    0], 1, 10, (255,255,0)), # Sun
+    #         Particle(win, [BOXSIZE/(2*C.XRSUN) + 66.120, BOXSIZE/(2*C.XRSUN), 0], [0, -58.98, 0], 0.000000165, 4, (105,105,105)), # Mercury
+    #         Particle(win, [BOXSIZE/(2*C.XRSUN) + 154.50, BOXSIZE/(2*C.XRSUN), 0], [0, -35.26, 0], 0.000002447, 4, (210,105,30)), # Venus
+    #         Particle(win, [BOXSIZE/(2*C.XRSUN) + 211.40, BOXSIZE/(2*C.XRSUN), 0], [0, -30.29, 0], 0.000003003, 4, (0,255,0)), # Earth
+    #         Particle(win, [BOXSIZE/(2*C.XRSUN) + 297.00, BOXSIZE/(2*C.XRSUN), 0], [0, -26.50, 0], 0.000000321, 4, (255,0,0)),#, # Mars
+    #         Particle(win, [BOXSIZE/(2*C.XRSUN) + 1064.4, BOXSIZE/(2*C.XRSUN), 0], [0, -13.72, 0], 0.0009543, 4, (160,82,45)),  # Jupiter
+    #         Particle(win, [BOXSIZE/(2*C.XRSUN) + 1944.2, BOXSIZE/(2*C.XRSUN), 0], [0, -10.18, 0], 0.0002857, 4, (102,102,0)),  # Saturn
+    #         Particle(win, [BOXSIZE/(2*C.XRSUN) + 3940.3, BOXSIZE/(2*C.XRSUN), 0], [0, -7.110, 0], 0.00004364, 4, (102,255,170)),  # Uranus
+    #         Particle(win, [BOXSIZE/(2*C.XRSUN) + 6388.5, BOXSIZE/(2*C.XRSUN), 0], [0, -5.500, 0], 0.00005149, 4, (0,0,255))]  # Neptune
+    
+    # Tauris Simulation
+    #Plist = [Particle(win, [BOXSIZE/(2*C.XRSUN) + 0.000000000000, BOXSIZE/(2*C.XRSUN), 0], [0,   6.623627965,    0], 9.9, 10,(255,0,0)),
+    #         Particle(win, [BOXSIZE/(2*C.XRSUN) + 478.6558908050, BOXSIZE/(2*C.XRSUN), 0], [0,   -59.556125654,    0], 1.1, 5, (0,255,0)),
+    #         Particle(win, [BOXSIZE/(2*C.XRSUN) + 1998.563218391, BOXSIZE/(2*C.XRSUN), 0], [0,   -27.561533740,    0], 1.3, 5, (0,0,255))]
 
-    Plist = [Particle(win, [BOXSIZE/(2*C.XRSUN) + 0.0000, BOXSIZE/(2*C.XRSUN), 0], [0,   0,    0], 1, 10, (255,255,0)), # Sun
-             Particle(win, [BOXSIZE/(2*C.XRSUN) + 66.120, BOXSIZE/(2*C.XRSUN), 0], [0, -58.98, 0], 0.000000165, 4, (105,105,105)), # Mercury
-             Particle(win, [BOXSIZE/(2*C.XRSUN) + 154.50, BOXSIZE/(2*C.XRSUN), 0], [0, -35.26, 0], 0.000002447, 4, (210,105,30)), # Venus
-             Particle(win, [BOXSIZE/(2*C.XRSUN) + 211.40, BOXSIZE/(2*C.XRSUN), 0], [0, -30.29, 0], 0.000003003, 4, (0,255,0)), # Earth
-             Particle(win, [BOXSIZE/(2*C.XRSUN) + 297.00, BOXSIZE/(2*C.XRSUN), 0], [0, -26.50, 0], 0.000000321, 4, (255,0,0)),#, # Mars
-             Particle(win, [BOXSIZE/(2*C.XRSUN) + 1064.4, BOXSIZE/(2*C.XRSUN), 0], [0, -13.72, 0], 0.0009543, 4, (160,82,45)),  # Jupiter
-             Particle(win, [BOXSIZE/(2*C.XRSUN) + 1944.2, BOXSIZE/(2*C.XRSUN), 0], [0, -10.18, 0], 0.0002857, 4, (102,102,0)),  # Saturn
-             Particle(win, [BOXSIZE/(2*C.XRSUN) + 3940.3, BOXSIZE/(2*C.XRSUN), 0], [0, -7.110, 0], 0.00004364, 4, (102,255,170)),  # Uranus
-             Particle(win, [BOXSIZE/(2*C.XRSUN) + 6388.5, BOXSIZE/(2*C.XRSUN), 0], [0, -5.500, 0], 0.00005149, 4, (0,0,255))]  # Neptune
-             
+    # Jstaff Simulation
+    Plist = [Particle(win, [BOXSIZE/(2*C.XRSUN) + 0.000000000000, BOXSIZE/(2*C.XRSUN), 0], [0,   0.346,    0], 0.77, 10,(255,0,0)),
+             Particle(win, [BOXSIZE/(2*C.XRSUN) + 186.000000000000, BOXSIZE/(2*C.XRSUN), 0], [0,   -20.8,    0], 0.0095, 5,(0,255,0)),
+             Particle(win, [BOXSIZE/(2*C.XRSUN) + 338.000000000000, BOXSIZE/(2*C.XRSUN), 0], [0,   -20.8,    0], 0.0095, 5,(0,0,255))]
+
 
     time = 0
     running = True
